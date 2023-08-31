@@ -2,6 +2,6 @@
 {
     public interface INotificationService
     {
-        void NotifyUser(int fromId, int toId, string content);
+        void NotifyUser(string exchangeType, int fromId, int toId, string content);
     }
 }

@@ -72,7 +72,7 @@ namespace WebApplicationConsumer.Consumer
             {
                 var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
 
-                notificationService.NotifyUser(message.FromId, message.ToId, message.Content);
+                notificationService.NotifyUser("DirectEchange", message.FromId, message.ToId, message.Content);
             }
         }
     }

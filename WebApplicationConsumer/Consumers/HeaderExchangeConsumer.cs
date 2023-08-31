@@ -67,7 +67,7 @@ namespace WebApplicationConsumer.Consumers
             {
                 var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
 
-                notificationService.NotifyUser(message.FromId, message.ToId, message.Content);
+                notificationService.NotifyUser("HeaderExchange", message.FromId, message.ToId, message.Content);
             }
         }
         
