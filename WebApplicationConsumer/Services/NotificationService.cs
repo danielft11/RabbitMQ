@@ -7,7 +7,11 @@ namespace WebApplicationConsumer.Services
     {
         public void NotifyUser(string exchangeType, int fromId, int toId, string content)
         {
-            string filePath = @"D:\Desenvolvimento\Projetos Visual Studio\RabbitMQ\WebApplicationConsumer\ReceivedMessages\ReceivedMessages.txt";
+            var basePath = AppContext.BaseDirectory;
+            var folderPath = Path.Combine(basePath, "ReceivedMessages");
+            Directory.CreateDirectory(folderPath);
+
+            string filePath = Path.Combine(folderPath, "ReceivedMessages.txt");
             string lineToRecord = $"Exchange Type: {exchangeType} - FromId: {fromId} - ToId: {toId} - Content: {content} - Date: {DateTime.Now}";
             
             using var writer = new StreamWriter(path: filePath, append: true);

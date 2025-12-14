@@ -23,8 +23,11 @@ namespace WebApplicationConsumer
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<RabbitMqConfiguration>(Configuration.GetSection("RabbitMq"));
+
             services.AddScoped<INotificationService, NotificationService>();
-            services.AddHostedService<DirectExchangeConsumer>();
+            services.AddSingleton<IRabbitMqChannel, RabbitMqChannel>();
+
+            services.AddHostedService<DirectExchangeConsumer>(); 
             services.AddHostedService<TopicExchangeConsumer>();
             services.AddHostedService<HeaderExchangeConsumer>();
             services.AddControllers();

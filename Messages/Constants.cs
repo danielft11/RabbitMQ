@@ -10,6 +10,10 @@
         public const string QUEUE_DEMO_TOPIC = "queue-demo-topic";
         public const string QUEUE_DEMO_HEADER = "queue-demo-header";
 
+        public const string TOPIC_EXCHANGE_CONSUMER_NAME = "topic-exchange-consumer-1";
+
+        public const string TOPIC_ROUTING_KEY = "account.*";
+
         public const string ROUTING_KEY_EXCHANGE_DIRECT = "routing-key-exchange-direct";
 
         //artigo: https://medium.com/@bakhtmunir/rabbitmq-exchanges-in-c-8b3202fb3ab0
