@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# RabbitMQ data (gerado pelo docker-compose)
+Docker/rabbitmq_data/
