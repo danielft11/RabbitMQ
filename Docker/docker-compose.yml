@@ -7,7 +7,7 @@ services:
             - 5672:5672
             - 15672:15672
         volumes:
-            - ./dados:/var/lib/rabbitmq/ #lado esquerdo é o caminho na máquina física (até ./dados:), lado direito é o que está dentro do container
+            - ./rabbitmq_data:/var/lib/rabbitmq/ #lado esquerdo é o caminho na máquina física (até ./dados:), lado direito é o que está dentro do container
         environment:
             RABBITMQ_DEFAULT_USER: guest
             RABBITMQ_DEFAULT_PASS: guest
