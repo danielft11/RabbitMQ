@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -19,14 +18,20 @@ namespace WebApplicationConsumer.Consumers
         private readonly IServiceProvider _serviceProvider;
         private readonly IRabbitMqChannel _rabbitMqChannel;
 
-        public TopicExchangeConsumer(IOptions<RabbitMqConfiguration> options, IServiceProvider serviceProvider, IRabbitMqChannel rabbitMqChannel)
+        public TopicExchangeConsumer(IServiceProvider serviceProvider, IRabbitMqChannel rabbitMqChannel)
         {
             _rabbitMqChannel = rabbitMqChannel;
             _serviceProvider = serviceProvider;
 
             _channel = _rabbitMqChannel.GetChannel();
 
-            RabbitMqTopologyInitializer.Configure(_channel);
+            RabbitMqTopologyInitializer.Configure(
+                channel: _channel,
+                exchange: Messages.Constants.EXCHANGE_TOPIC_DEMO,
+                exchangeType: ExchangeType.Topic,
+                queue: Messages.Constants.QUEUE_DEMO_TOPIC,
+                Messages.Constants.TOPIC_ROUTING_KEY
+                );
 
             _channel.BasicQos(0, 10, false);
         }
@@ -40,7 +45,7 @@ namespace WebApplicationConsumer.Consumers
                 try
                 {
                     var content = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
-                    
+
                     var message = JsonConvert.DeserializeObject<MessageRabbit>(content);
                     if (message == null)
                         throw new JsonException("Mensagem inválida.");
@@ -62,9 +67,9 @@ namespace WebApplicationConsumer.Consumers
             };
 
             _channel.BasicConsume(
-                queue: Messages.Constants.QUEUE_DEMO_TOPIC, 
+                queue: Messages.Constants.QUEUE_DEMO_TOPIC,
                 autoAck: false, // NÃO remova a mensagem automaticamente quando entregá-la ao consumer.
-                consumerTag: Messages.Constants.TOPIC_EXCHANGE_CONSUMER_NAME, 
+                consumerTag: Messages.Constants.TOPIC_EXCHANGE_CONSUMER_NAME,
                 consumer: consumer
                 );
 

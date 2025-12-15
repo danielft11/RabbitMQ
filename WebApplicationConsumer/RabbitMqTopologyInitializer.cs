@@ -5,7 +5,7 @@ namespace WebApplicationConsumer
 {
     public static class RabbitMqTopologyInitializer
     {
-        public static void Configure(IModel channel) 
+        public static void Configure(IModel channel, string exchange, string exchangeType, string queue, string routingKey) 
         {
             // DLX
             channel.ExchangeDeclare("demo.dlx", ExchangeType.Direct, durable: true);
@@ -19,10 +19,10 @@ namespace WebApplicationConsumer
                 { "x-dead-letter-routing-key", "demo.dlq" }
             };
 
-            channel.ExchangeDeclare(Messages.Constants.EXCHANGE_TOPIC_DEMO, ExchangeType.Topic, durable: true);
+            channel.ExchangeDeclare(exchange, exchangeType, durable: true);
 
             channel.QueueDeclare(
-                queue: Messages.Constants.QUEUE_DEMO_TOPIC,
+                queue: queue,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
@@ -31,9 +31,9 @@ namespace WebApplicationConsumer
 
             //Liga a fila queue_demo_topic à exchange exchange_topic_demo e define quais mensagens essa fila vai recebe
             channel.QueueBind(
-                queue: Messages.Constants.QUEUE_DEMO_TOPIC,
-                exchange: Messages.Constants.EXCHANGE_TOPIC_DEMO,
-                routingKey: Messages.Constants.TOPIC_ROUTING_KEY
+                queue: queue,
+                exchange: exchange,
+                routingKey: routingKey
             );
 
         }
