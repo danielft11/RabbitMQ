@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using WebApplicationConsumer.Consumer;
-using WebApplicationConsumer.Consumers;
+using WebApplicationConsumer.Consumer;
 using WebApplicationConsumer.Services;
 
 namespace WebApplicationConsumer
@@ -25,7 +25,7 @@ namespace WebApplicationConsumer
             services.Configure<RabbitMqConfiguration>(Configuration.GetSection("RabbitMq"));
 
             services.AddScoped<INotificationService, NotificationService>();
-            services.AddSingleton<IRabbitMqChannel, RabbitMqChannel>();
+            services.AddSingleton<IRabbitMQConnection, RabbitMQConnection>();
 
             services.AddHostedService<DirectExchangeConsumer>(); 
             services.AddHostedService<TopicExchangeConsumer>();

@@ -1,79 +1,24 @@
-﻿using Messages;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
+﻿using RabbitMQ.Client;
 using System;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using WebApplicationConsumer.Services;
 
 namespace WebApplicationConsumer.Consumer
 {
-    public class DirectExchangeConsumer : BackgroundService
+    public class DirectExchangeConsumer : RabbitMQBaseConsumer
     {
-        private readonly RabbitMqConfiguration _config;
-        private readonly IConnection _connection;
-        private readonly IModel _channel;
-        private readonly IServiceProvider _serviceProvider;
-
-        public DirectExchangeConsumer(IOptions<RabbitMqConfiguration> options, IServiceProvider serviceProvider)
+        public DirectExchangeConsumer(IServiceProvider serviceProvider, IRabbitMQConnection rabbitMQConnection) : base(serviceProvider, rabbitMQConnection)
         {
-            _config = _config = options.Value;
-            _serviceProvider = serviceProvider;
-
-            var factory = new ConnectionFactory
-            {
-                HostName = _config.Host,
-                UserName = _config.UserName,
-                Password = _config.Password
-            };
-
-            _connection = factory.CreateConnection();
-            _channel = _connection.CreateModel();
-
-            _channel.QueueDeclare(
+            RabbitMqTopologyInitializer.Configure(
+                channel: _channel,
+                exchange: Messages.Constants.EXCHANGE_DIRECT_DEMO,
+                exchangeType: ExchangeType.Direct,
                 queue: Messages.Constants.QUEUE_DEMO_DIRECT,
-                durable: false,
-                exclusive: false,
-                autoDelete: false,
-                arguments: null);
-
+                routingKey: Messages.Constants.ROUTING_KEY_EXCHANGE_DIRECT
+                );
         }
 
-        protected override async Task<Task> ExecuteAsync(CancellationToken stoppingToken)
-        {
-            var consumer = new EventingBasicConsumer(_channel);
-
-            consumer.Received += (sender, eventArgs) => 
-            {
-                var contentArray = eventArgs.Body.ToArray();
-                var contentString = Encoding.UTF8.GetString(contentArray);
-                var message = JsonConvert.DeserializeObject<MessageRabbit>(contentString);
-
-                NotifyUser(message);
-
-                // informa ao RabbitMQ que a entrega da mensagem foi realizada
-                _channel.BasicAck(eventArgs.DeliveryTag, false);
-            };
-
-            // inicia o consumo da mensagem
-            _channel.BasicConsume(Messages.Constants.QUEUE_DEMO_DIRECT, false, consumer);
-
-            return Task.CompletedTask;
-        }
-
-        private void NotifyUser(MessageRabbit message)
-        {
-            using (var scope = _serviceProvider.CreateScope()) 
-            {
-                var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
-
-                notificationService.NotifyUser("DirectEchange", message.FromId, message.ToId, message.Content);
-            }
-        }
+        protected override string QueueName => Messages.Constants.QUEUE_DEMO_DIRECT;
+        protected override string SourceName => Messages.Constants.EXCHANGE_DIRECT_DEMO;
+        protected override string ConsumerTag => string.Empty;
     }
+
 }

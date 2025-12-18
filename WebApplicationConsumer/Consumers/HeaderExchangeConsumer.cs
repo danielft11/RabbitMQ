@@ -1,75 +1,31 @@
-﻿using Messages;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
+﻿using RabbitMQ.Client;
 using System;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using WebApplicationConsumer.Services;
+using System.Collections.Generic;
 
-namespace WebApplicationConsumer.Consumers
+namespace WebApplicationConsumer.Consumer
 {
-    public class HeaderExchangeConsumer : BackgroundService
+    public class HeaderExchangeConsumer : RabbitMQBaseConsumer
     {
-        private readonly RabbitMqConfiguration _config;
-        private readonly IConnection _connection;
-        private readonly IModel _channel;
-        private readonly IServiceProvider _serviceProvider;
-
-        public HeaderExchangeConsumer(IOptions<RabbitMqConfiguration> options, IServiceProvider serviceProvider)
+        public HeaderExchangeConsumer(IServiceProvider serviceProvider, IRabbitMQConnection rabbitMQConnection) : base(serviceProvider, rabbitMQConnection)
         {
-            _config = _config = options.Value;
-            _serviceProvider = serviceProvider;
-            
-            var factory = new ConnectionFactory
-            {
-                HostName = _config.Host,
-                UserName = _config.UserName,
-                Password = _config.Password
-            };
+            var header = new Dictionary<string, object>() { { "account", "new" } };
 
-            _connection = factory.CreateConnection();
-            _channel = _connection.CreateModel();
+            RabbitMqTopologyInitializer.Configure(
+                channel: _channel,
+                exchange: Messages.Constants.EXCHANGE_HEADER_DEMO,
+                exchangeType: ExchangeType.Headers,
+                queue: Messages.Constants.QUEUE_DEMO_HEADER,
+                routingKey: string.Empty,
+                arguments: header
+                );
 
-            _channel.QueueDeclare(Messages.Constants.QUEUE_DEMO_HEADER, durable: false, exclusive: false, autoDelete: false, arguments: null);
-            
+            _channel.BasicQos(0, 10, false);
+
         }
-        
-        protected override async Task<Task> ExecuteAsync(CancellationToken stoppingToken)
-        {
-            var consumer = new EventingBasicConsumer(_channel);
 
-            consumer.Received += (sender, eventArgs) => 
-            {
-                var contentArray = eventArgs.Body.ToArray();
-                var contentString = Encoding.UTF8.GetString(contentArray);
-                var message = JsonConvert.DeserializeObject<MessageRabbit>(contentString);
-
-                NotifyUser(message);
-
-                // informa ao RabbitMQ que a entrega da mensagem foi realizada
-                _channel.BasicAck(eventArgs.DeliveryTag, false);
-            };
-
-            // inicia o consumo da mensagem
-            _channel.BasicConsume(Messages.Constants.QUEUE_DEMO_HEADER, true, consumer);
-
-            return Task.CompletedTask;
-        }
-        
-        private void NotifyUser(MessageRabbit message)
-        {
-            using (var scope = _serviceProvider.CreateScope()) 
-            {
-                var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
-
-                notificationService.NotifyUser("HeaderExchange", message.FromId, message.ToId, message.Content);
-            }
-        }
-        
+        protected override string QueueName => Messages.Constants.QUEUE_DEMO_HEADER;
+        protected override string SourceName => Messages.Constants.EXCHANGE_HEADER_DEMO;
+        protected override string ConsumerTag => string.Empty;
     }
+
 }
